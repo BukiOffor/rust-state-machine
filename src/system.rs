@@ -1,53 +1,50 @@
 use std::collections::BTreeMap;
 
-use num::{CheckedAdd, CheckedSub, Zero};
+use num::{CheckedAdd, One, Zero};
 
-//use crate::types::*;
+use crate::Config;
+
 
 /// This is the System Pallet.
 /// It handles low level state needed for your blockchain.
 #[derive(Debug)]
-pub struct Pallet<AccountId,BlockNumber,Nonce> {
+pub struct Pallet<T: Config> {
 	/// The current block number.
-	block_number: BlockNumber,
+	block_number: T::BlockNumber,
 	/// A map from an account to their nonce.
-	nonce: BTreeMap<AccountId, Nonce>,
+	nonce: BTreeMap<T::AccountId, T::Nonce>,
 }
 
-impl<AccountId, BlockNumber, Nonce> Pallet<AccountId, BlockNumber, Nonce>
-where 
-AccountId: Ord + Clone,
-BlockNumber: Zero + CheckedSub + CheckedAdd + Copy + num::Integer + std::fmt::Display,
-Nonce: Zero + CheckedAdd + CheckedSub + Copy + num::Integer
+impl<T:Config> Pallet<T>
 
 {
 	/// Create a new instance of the System Pallet.
 	pub fn new() -> Self {
-		Self { block_number: BlockNumber::zero(), nonce: BTreeMap::new() }
+		Self { block_number: T::BlockNumber::zero(), nonce: BTreeMap::new() }
 	}
 
 	/// Get the current block number.
-	pub fn block_number(&self) -> BlockNumber {
+	pub fn block_number(&self) -> T::BlockNumber {
 		self.block_number
 	}
 
 	// This function can be used to increment the block number.
 	// Increases the block number by one.
 	pub fn inc_block_number(&mut self) {
-		let block_num = self.block_number.checked_add(&BlockNumber::one()).unwrap();
+		let block_num = self.block_number.checked_add(&T::BlockNumber::one()).unwrap();
 		self.block_number = block_num
 
 	}
 
 	// Increment the nonce of an account. This helps us keep track of how many transactions each
 	// account has made.
-	pub fn inc_nonce(&mut self, who: &AccountId) {
+	pub fn inc_nonce(&mut self, who: &T::AccountId) {
 		// self.nonce.entry(who.clone()).and_modify(|e| { 
 		// 	e.checked_add(&Nonce::one()).unwrap();
 		// }).or_insert(Nonce::one());
 		
-		let nonce: Nonce = *self.nonce.get(who).unwrap_or(&Nonce::zero());
-        let new_nonce = nonce + Nonce::one();
+		let nonce: T::Nonce = *self.nonce.get(who).unwrap_or(&T::Nonce::zero());
+        let new_nonce = nonce + T::Nonce::one();
         self.nonce.insert(who.clone(), new_nonce);
 	}
 }
@@ -57,7 +54,7 @@ mod test {
 	use crate::types::*;
 	#[test]
 	fn init_system() {
-		let mut system: super::Pallet<AccountId, BlockNumber, Nonce> = super::Pallet::new();
+		let mut system : super::Pallet<TestConfig> = super::Pallet::new();
 		system.inc_block_number();
 		system.inc_nonce(&"alice".to_string());
 		system.inc_nonce(&"bob".to_string());

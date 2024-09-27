@@ -2,15 +2,23 @@ mod balances;
 mod system;
 mod types;
 use types::*;
+use std::fmt::Debug;
+
 // This is our main Runtime.
 // It accumulates all of the different pallets we want to use.
 #[derive(Debug)]
-pub struct Runtime<A,B, BN, N> {
-	system: system::Pallet<A,BN,N>,
-	balances: balances::Pallet<A, B>,
+pub struct Runtime {
+	system: system::Pallet<Self>,
+	balances: balances::Pallet<Self>,
+}
+impl Config for Runtime {
+	type AccountId = String;
+	type BlockNumber = u32;
+	type Nonce = u32;
+	type Balance = u128;
 }
 
-impl Runtime< AccountId, Balance, BlockNumber, Nonce > {
+impl Runtime<> {
 	/// Creates a new instance of the main Runtime, by creating a new instance of each pallet.
 	fn new() -> Self {
 		Self { system: system::Pallet::new(), balances: balances::Pallet::new() }
