@@ -18,9 +18,6 @@ pub type Extrinsic = crate::support::Extrinsic<AccountId, crate::RuntimeCall>;
 pub type Header = crate::support::Header<BlockNumber>;
 pub type Block = crate::support::Block<Header, Extrinsic>;
 
-
-
-
 pub struct TestConfig;
 
 impl super::Config for TestConfig {

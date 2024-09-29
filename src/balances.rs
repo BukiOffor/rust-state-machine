@@ -14,30 +14,27 @@ pub struct Pallet<T: Config> {
 // We should expect that the caller of each call will be provided by the dispatcher,
 // and not included as a parameter of the call.
 pub enum EntryPoint<T: Config> {
-   //Transfer(T::AccountId,T::Balance)
-   Transfer { to: T::AccountId, amount: T::Balance },
-
-} 
+	//Transfer(T::AccountId,T::Balance)
+	Transfer { to: T::AccountId, amount: T::Balance },
+}
 
 /// Implementation of the dispatch logic, mapping from `BalancesCall` to the appropriate underlying
 /// function we want to execute.
 impl<T: Config> crate::support::Dispatch for Pallet<T> {
 	//we are pulling the AccountId type in the config trait
 	type Caller = T::AccountId;
-    type Call = EntryPoint<T>;
+	type Call = EntryPoint<T>;
 
-    fn dispatch(
-        &mut self,
-        caller: Self::Caller,
-        call: Self::Call,
-    ) -> crate::support::DispatchResult {
+	fn dispatch(
+		&mut self,
+		caller: Self::Caller,
+		call: Self::Call,
+	) -> crate::support::DispatchResult {
 		match call {
-			EntryPoint::Transfer{to, amount} => {
-				self.transfer(&caller, &to, amount)?
-			},
+			EntryPoint::Transfer { to, amount } => self.transfer(&caller, &to, amount)?,
 		}
-        Ok(())
-    }
+		Ok(())
+	}
 }
 
 impl<T: Config> Pallet<T> {
@@ -68,12 +65,6 @@ impl<T: Config> Pallet<T> {
 		Ok(())
 	}
 }
-
-
-
-
-
-
 
 #[cfg(test)]
 mod test {
