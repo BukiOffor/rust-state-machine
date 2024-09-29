@@ -14,14 +14,25 @@ pub struct Runtime {
 	balances: balances::Pallet<Self>,
 }
 
+// These are all the calls which are exposed to the world.
+// Note that it is just an accumulation of the calls exposed by each module.
+pub enum RuntimeCall {
+	// BalancesTransfer { to: types::AccountId, amount: types::Balance },
+	/// makes use of and outer and inner enum generic over ```T:Config```
+	Balances(balances::EntryPoint<Runtime>),
+ 
+ }
+ 
+
 impl Config for Runtime {
 	type AccountId = String;
 	type BlockNumber = u32;
 	type Nonce = u32;
 	type Balance = u128;
 }
+
 impl crate::support::Dispatch for Runtime {
-    type Caller = AccountId;
+    type Caller = self::AccountId;
     type Call = RuntimeCall;
     // Dispatch a call on behalf of a caller. Increments the caller's nonce.
     //
@@ -34,10 +45,10 @@ impl crate::support::Dispatch for Runtime {
         runtime_call: Self::Call,
     ) -> support::DispatchResult {
         match runtime_call {
-			RuntimeCall::BalancesTransfer { to, amount } => {
-				self.balances.transfer(&caller, &to, amount)?;
-				Ok(())
-			}
+			RuntimeCall::Balances(call) => {
+				self.balances.dispatch(caller, call)?;			
+			    Ok(())
+}
 		}
     }
 }
@@ -64,11 +75,6 @@ impl Runtime {
     }
 }
 
-// These are all the calls which are exposed to the world.
-// Note that it is just an accumulation of the calls exposed by each module.
-pub enum RuntimeCall {
-    BalancesTransfer { to: types::AccountId, amount: types::Balance },
-}
 
 
 
@@ -76,23 +82,27 @@ fn main() {
 	let mut runtime = Runtime::new();
 	runtime.balances.set_balance(&"alice".to_string(), 100);
 
-	// start emulating a block
-	runtime.system.inc_block_number();
-	assert_eq!(runtime.system.block_number(), 1);
+	let block_1 = types::Block {
+		header: support::Header { block_number: 1 },
+		extrinsics: vec![
+			support::Extrinsic {
+				caller: "alice".to_owned(),
+				//call: RuntimeCall::BalancesTransfer { to: "bob".to_owned(), amount: 69 },
+				call: RuntimeCall::Balances(balances::EntryPoint::Transfer { to: "bob".to_owned(), amount: 20 })
+			},
+			support::Extrinsic {
+				caller: "alice".to_owned(),
+				call: RuntimeCall::Balances(balances::EntryPoint::Transfer { to: "charlie".to_owned(), amount: 10 })
+			},
+			support::Extrinsic {
+				caller: "alice".to_owned(),
+				call: RuntimeCall::Balances(balances::EntryPoint::Transfer { to: "oscar".to_owned(), amount: 20 })
+			},
+		],
+	};
 
-	// first transaction
-	runtime.system.inc_nonce(&"alice".to_string());
-	let _ = runtime
-		.balances
-		.transfer(&"alice".to_owned(), &"bob".to_owned(), 30)
-		.map_err(|e| eprintln!("{}", e));
-	
-	// second transaction
-	runtime.system.inc_nonce(&"alice".to_string());
-	let _ = runtime
-		.balances
-		.transfer(&"alice".to_owned(), &"charlie".to_owned(), 20)
-		.map_err(|e| eprintln!("{}", e));
+	runtime.execute_block(block_1).expect("invalid block");
+
 
 	println!("{:#?}", runtime);
 }
