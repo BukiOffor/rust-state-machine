@@ -23,7 +23,8 @@ pub enum RuntimeCall {
 	// BalancesTransfer { to: types::AccountId, amount: types::Balance },
 	/// makes use of and outer and inner enum generic over ```T:Config```
 	Balances(balances::EntryPoint<Runtime>),
-	CreateClaim(proof_of_existence::EntryPoint<Runtime>)
+	ProofOfExistence(proof_of_existence::EntryPoint<Runtime>),
+
 }
 
 impl Config for Runtime {
@@ -34,7 +35,7 @@ impl Config for Runtime {
 }
 
 impl proof_of_existence::Config for Runtime {
-	type Content = String;
+	type Content = types::Content;
 }
 
 impl crate::support::Dispatch for Runtime {
@@ -55,9 +56,9 @@ impl crate::support::Dispatch for Runtime {
 				self.balances.dispatch(caller, call)?;
 				Ok(())
 			},
-			RuntimeCall::CreateClaim(call) => {
+			RuntimeCall::ProofOfExistence(call) => {
 				self.proof.dispatch(caller, call)
-			}
+			},
 		}
 	}
 }
@@ -116,7 +117,39 @@ fn main() {
 		],
 	};
 
-	runtime.execute_block(block_1).expect("invalid block");
+	let block_2 = types::Block {
+        header: support::Header { block_number: 2 },
+        extrinsics: vec![
+            support::Extrinsic {
+                caller: "alice".to_string(),
+                call: RuntimeCall::ProofOfExistence(proof_of_existence::EntryPoint::CreateClaim("Hello, world!".to_owned())),
+            },
+            support::Extrinsic {
+                caller: "bob".to_string(),
+				call: RuntimeCall::ProofOfExistence(proof_of_existence::EntryPoint::CreateClaim("Hello, world!".to_owned())),
+            },
+        ],
+    };
+
+    let block_3 = types::Block {
+        header: support::Header { block_number: 3 },
+        extrinsics: vec![
+            support::Extrinsic {
+                caller: "alice".to_owned(),
+                call: RuntimeCall::ProofOfExistence(proof_of_existence::EntryPoint::RevokeClaim("Hello world!".to_string())),
+            },
+            support::Extrinsic {
+                caller: String::from("bob"),
+                call: RuntimeCall::ProofOfExistence(proof_of_existence::EntryPoint::CreateClaim("Hello, world!".to_string())),
+            },
+        ],
+    };
+
+    // Execute the extrinsics which make up our blocks.
+    // If there are any errors, our system panics, since we should not execute invalid blocks.
+    runtime.execute_block(block_1).expect("invalid block");
+    runtime.execute_block(block_2).expect("invalid block");
+    runtime.execute_block(block_3).expect("invalid block");
 
 	println!("{:#?}", runtime);
 }
