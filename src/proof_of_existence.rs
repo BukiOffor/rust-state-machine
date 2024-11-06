@@ -16,7 +16,7 @@ pub trait Config: crate::types::Config {
 pub struct Pallet<T: Config> {
 	/// A simple storage map from content to the owner of that content.
 	/// Accounts can make multiple different claims, but each claim can only have one owner.
-	pub claims: BTreeMap<T::Content, T::AccountId>,
+	pub claims: BTreeMap<<T as Config>::Content, T::AccountId>,
 }
 
 // A public enum which describes the calls we want to expose to the dispatcher.
@@ -105,7 +105,7 @@ mod test {
 		assert_eq!(pallet.get_claim(&"Hello, world!"), Some(&"alice"));
 		assert_eq!(
 			pallet.create_claim("bob", "Hello, world!"),
-			Err("this content is already claimed")
+			Err("This claim has already been created")
 		);
 		assert_eq!(pallet.revoke_claim("alice", "Hello, world!"), Ok(()));
 		assert_eq!(pallet.create_claim("bob", "Hello, world!"), Ok(()));

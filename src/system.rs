@@ -14,6 +14,8 @@ pub struct Pallet<T: Config> {
 	nonce: BTreeMap<T::AccountId, T::Nonce>,
 }
 
+
+
 impl<T: Config> Pallet<T> {
 	/// Create a new instance of the System Pallet.
 	pub fn new() -> Self {
@@ -40,7 +42,7 @@ impl<T: Config> Pallet<T> {
 		// }).or_insert(Nonce::one());
 
 		let nonce: T::Nonce = *self.nonce.get(who).unwrap_or(&T::Nonce::zero());
-		let new_nonce = nonce + T::Nonce::one();
+		let new_nonce = nonce +  T::Nonce::one();
 		self.nonce.insert(who.clone(), new_nonce);
 	}
 }

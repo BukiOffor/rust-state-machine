@@ -26,6 +26,9 @@ pub enum RuntimeCall {
 	ProofOfExistence(proof_of_existence::EntryPoint<Runtime>),
 
 }
+impl Signer<String> for Runtime {
+	
+}
 
 impl Config for Runtime {
 	type AccountId = String;
@@ -116,7 +119,7 @@ fn main() {
 			},
 		],
 	};
-
+	let sig = runtime.sign(&"Hello, world!".to_owned(), "alice".to_string());
 	let block_2 = types::Block {
         header: support::Header { block_number: 2 },
         extrinsics: vec![

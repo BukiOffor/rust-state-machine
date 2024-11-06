@@ -7,7 +7,9 @@ use crate::{support::DispatchResult, Config};
 //use crate::types::*;
 #[derive(Debug)]
 pub struct Pallet<T: Config> {
-	balances: BTreeMap<T::AccountId, T::Balance>,
+	// we do this to specify which type from which trait, 
+	// because what if there is another trait that the type implements that has the same type Name
+	balances: BTreeMap<<T as Config>::AccountId, T::Balance>, 
 }
 
 // A public enum which describes the calls we want to expose to the dispatcher.
